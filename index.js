@@ -5,6 +5,9 @@ const prompt = require("prompt-sync")();
 // Import the recipe data from the JSON file
 const cakeRecipes = require("./cake-recipes.json");
 
+// Initialize empty array to track saved recipes
+let savedRecipes = [];
+
 // Function to get all unique authors
 function getUniqueAuthors(recipes) {
   // Use a Set to ensure we only have unique authors
@@ -23,11 +26,13 @@ function logRecipeNames(recipes) {
 // Function to get recipes by a specific author
 function getRecipesByAuthor(recipes, author) {
   // Filter recipes based on the author
-  const recipesByAuthor = recipes.filter(recipe => recipe.Author === author);
+  const authorLower = author.toLowerCase(); // Convert input to lower case
+  const recipesByAuthor = recipes.filter(recipe => recipe.Author.toLowerCase() === authorLower);
   if (!recipesByAuthor.length) {
     console.log(`No recipes found for the author "${author}".`); // Handle case when no recipes match the author
   } else {
     recipesByAuthor.forEach(({ Name }) => console.log(Name)); // Log the names of the recipes by this author
+    savedRecipes = recipesByAuthor; // Save the filtered recipes
   }
   return recipesByAuthor;
 }
@@ -35,24 +40,28 @@ function getRecipesByAuthor(recipes, author) {
 // Function to get recipes containing a specific ingredient
 function getRecipesByIngredient(recipes, ingredient) {
   // Filter recipes to find those containing the specified ingredient
+  const ingredientLower = ingredient.toLowerCase(); // Convert input to lower case
   const filteredRecipes = recipes.filter(recipe =>
-    recipe.Ingredients && recipe.Ingredients.some(item => item.includes(ingredient))
+    recipe.Ingredients && recipe.Ingredients.some(item => item.toLowerCase().includes(ingredientLower))
   );
   if (!filteredRecipes.length) {
     console.log(`No recipes found with the ingredient "${ingredient}".`); // Handle case when no recipes have the ingredient
   } else {
     filteredRecipes.forEach(({ Name }) => console.log(Name)); // Log the names of matching recipes
+    savedRecipes = filteredRecipes; // Save the filtered recipes
   }
   return filteredRecipes;
 }
 // Function to find a recipe by its name
 function getRecipesByName(recipes, name) {
   // Use .find to locate the recipe by name
-  const recipe = recipes.find(recipe => recipe.Name && recipe.Name.includes(name)) || null;
+  const nameLower = name.toLowerCase(); // Convert input to lower case
+  const recipe = recipes.find(recipe => recipe.Name && recipe.Name.toLowerCase().includes(nameLower)) || null;
   if (!recipe) {
     console.log(`No recipe found with the name "${name}".`); // Handle case when no recipe matches the name
   } else {
     console.log(recipe); // Log the details of the found recipe
+    savedRecipes = [recipe]; // Save the found recipe
   }
   return recipe;
 }
@@ -107,10 +116,14 @@ do {
       console.log("Recipe details:");
       getRecipesByName(cakeRecipes, name); // Call function to get recipe by name
       break;
-    case 5:
-      console.log("All Ingredients:");
-      console.log(getAllIngredients(cakeRecipes)); // Call function to get all unique ingredients
-      break;
+      case 5:
+        if (!savedRecipes.length) {
+          console.log("No saved recipes. Use other options to filter recipes first.");
+        } else {
+          console.log("All Ingredients:");
+          console.log(getAllIngredients(savedRecipes).join(", ")); // Call function to get all ingredients of saved recipes
+        }
+        break;
     case 0:
       console.log("Exiting..."); // Exit message
       break;
